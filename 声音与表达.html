@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f4f1ea">
+<title>声音与表达</title>
+<style>
+:root{--bg:#f4f1ea;--card:#fffdf8;--line:#e3ddd0;--txt:#33302a;--dim:#8c8578;--accent:#5b7f6a;--warm:#c07a4a;--bad:#c05a4a}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,"PingFang SC","Noto Sans CJK SC",sans-serif;-webkit-text-size-adjust:100%}
+body{padding-bottom:40px}
+header{padding:16px 14px 8px}
+h1{font-size:19px;margin:0;color:#3f4a3f}
+.sub{font-size:12px;color:var(--dim);margin-top:3px}
+nav{display:flex;gap:6px;padding:8px 12px;position:sticky;top:0;background:var(--bg);z-index:9;border-bottom:1px solid var(--line)}
+nav button{flex:1;padding:9px 0;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--dim);font-size:14px;font-family:inherit}
+nav button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+main{padding:12px}
+section{display:none}
+section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.card h2{font-size:15px;margin:0 0 8px;color:var(--accent)}
+.card p{font-size:13.5px;line-height:1.8;margin:6px 0}
+.dim{color:var(--dim)}
+.step{border-bottom:1px solid var(--line);padding:12px 0;display:flex;gap:10px;align-items:flex-start}
+.step:last-child{border-bottom:0}
+.step input{width:20px;height:20px;margin-top:2px;accent-color:var(--accent);flex:none}
+.stepname{font-size:14.5px;font-weight:600}
+.stepdur{font-size:12px;color:var(--warm);margin-left:6px}
+.step ul{margin:6px 0 0;padding-left:18px}
+.step li{font-size:13px;line-height:1.7}
+.timerbox{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px}
+.tval.run{animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+.tval{font-size:28px;font-variant-numeric:tabular-nums;min-width:92px;text-align:center;color:var(--accent)}
+.tbtn{flex:1;min-width:56px;padding:8px 0;border-radius:9px;border:1px solid var(--line);background:#f7f3ea;color:var(--dim);font-size:12.5px;font-family:inherit}
+.btn{padding:9px 14px;border-radius:9px;border:0;background:var(--accent);color:#fff;font-size:13.5px;font-family:inherit;margin-right:8px;margin-top:8px}
+.btn2{padding:8px 12px;border-radius:9px;border:1px solid var(--line);background:#f7f3ea;color:var(--txt);font-size:13px;font-family:inherit;margin-right:8px;margin-top:8px}
+.bar{height:12px;border-radius:6px;background:#eee7d8;overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .08s}
+.meter{font-size:12.5px;color:var(--dim)}
+.topic{font-size:17px;line-height:1.6;font-weight:600;margin:8px 0}
+.hint{font-size:12.5px;color:var(--dim);line-height:1.8}
+textarea{width:100%;min-height:54px;background:#fff;color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;font-family:inherit;resize:vertical}
+.hist{border-bottom:1px solid var(--line);padding:9px 0;font-size:13px;display:flex;justify-content:space-between}
+.hist:last-child{border-bottom:0}
+.passage{background:#f7f3ea;border-radius:10px;padding:12px;font-size:15px;line-height:2;color:#3a3630}
+audio{width:100%;margin-top:10px}
+.toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);background:rgba(40,36,30,.88);color:#fff;padding:12px 22px;border-radius:12px;font-size:15px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:99}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <h1>声音与表达</h1>
+  <div class="sub">每天十分钟 · 先把声音送出去，再把话讲清楚</div>
+</header>
+<nav>
+  <button class="on" data-t="today">今日练习</button>
+  <button data-t="topic">话题卡</button>
+  <button data-t="log">记录</button>
+</nav>
+<main>
+<section id="today" class="on">
+  <div class="card">
+    <h2>今天先做这五步</h2>
+    <p class="dim">十分钟就够，别贪多。先练气，再练声，最后练把话说明白。</p>
+    <div class="timerbox">
+      <div class="tval" id="tval">00:30</div>
+      <button class="tbtn" data-sec="30">30 秒</button>
+      <button class="tbtn" data-sec="60">60 秒</button>
+      <button class="tbtn" data-sec="90">90 秒</button>
+      <button class="tbtn" data-sec="120">2 分钟</button>
+      <button class="tbtn" id="tstop">停</button>
+      <button class="tbtn" id="testAlarm">试听</button>
+    </div>
+  </div>
+  <div class="card" id="steps">
+    <h2>练习清单</h2>
+  </div>
+
+  <div class="card">
+    <h2>音量计</h2>
+    <p>对着手机说话，绿色条越高声音越大。先试着把条稳定推过一半，别喊，用气推。</p>
+    <div class="bar"><i id="vbar"></i></div>
+    <div class="meter" id="vtext">还没开始</div>
+    <div>
+      <button class="btn" id="vstart">开始测音量</button>
+      <button class="btn2" id="vstop">停</button>
+    </div>
+    <p class="hint" id="vhint">如果提示拿不到麦克风，就换成手机自带的录音机。</p>
+  </div>
+
+  <div class="card">
+    <h2>录一段回放</h2>
+    <p>说自己今天做的第一件事，三十秒。录完回放，重点听句尾有没有掉下去。</p>
+    <div>
+      <button class="btn" id="rstart">开始录音</button>
+      <button class="btn2" id="rstop">停止</button>
+    </div>
+    <audio id="rplay" controls style="display:none"></audio>
+    <p class="hint" id="rhint"></p>
+  </div>
+
+  <div class="card">
+    <h2>朗读材料</h2>
+    <p class="dim">读出声，句尾的最后一个字也要让对方听清。</p>
+    <div class="passage" id="passage"></div>
+    <p><button class="btn2" id="newpassage">换一篇</button></p>
+  </div>
+</section>
+
+<section id="topic">
+  <div class="card">
+    <h2>一分钟表达</h2>
+    <p class="dim">抽一张，按“先说结论，再说两点理由，最后收一句”的顺序讲完。</p>
+    <div class="topic" id="topicText"></div>
+    <p class="hint" id="topicHint"></p>
+    <div>
+      <button class="btn" id="newtopic">换一张</button>
+      <button class="btn2" id="startTopic">开始计时一分钟</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>结构模板</h2>
+    <p>结论：我想说的事一句话讲完，比如“我觉得周末去爬山更划算”。</p>
+    <p>理由一：第一个原因，越具体越好，最好带一个数字或者例子。</p>
+    <p>理由二：第二个原因，和第一个不一样的角度。</p>
+    <p>收尾：一句话把结论再说一遍，或者给对方一个明确的建议。</p>
+    <p class="hint">卡住的时候就说“我举个例”，这句话能帮你把话接下去。</p>
+  </div>
+</section>
+
+<section id="log">
+  <div class="card">
+    <h2>打卡</h2>
+    <div class="bar"><i id="pbar"></i></div>
+    <div class="meter"><span id="pcount">0 / 5</span>　<span id="streak">连续 0 天</span></div>
+    <textarea id="note" placeholder="今天哪一句最难说出口，记一句就行"></textarea>
+    <p class="hint">自动保存。</p>
+  </div>
+  <div class="card">
+    <h2>最近</h2>
+    <div id="history"><p class="dim">还没有记录。</p></div>
+  </div>
+  <div class="card">
+    <h2>针对你情况的小提醒</h2>
+    <p>说话前先吸一口气，别急着开口；眼睛看着对方，声音自然会往前送。</p>
+    <p>每句话最后一个字，故意比前面稍微重一点，别让它掉下去。</p>
+    <p>嘈杂的地方别隔着人喊，走近一步再说，比扯嗓子管用。</p>
+    <p>紧张的时候放慢速度，慢一点反而听得清，也更像想清楚了。</p>
+  </div>
+</section>
+</main>
+<div id="toast" class="toast"></div>
+<script>
+(function(){
+'use strict';
+var $=function(s){return document.querySelector(s)};
+var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s))};
+var STEPS=[
+ {id:'s1',name:'腹式呼吸',dur:'2 分钟',secs:120,pts:['躺平或者坐直，一只手放肚子上','吸气四秒，让肚子鼓起来；呼气六秒，慢慢瘪下去','肩膀别抬，只有肚子在动']},
+ {id:'s2',name:'哼鸣热身',dur:'30 秒',secs:30,pts:['嘴唇放松，哼“嗯——”，声音从鼻子出','感觉鼻子和胸口在震','轻松一点，别挤嗓子']},
+ {id:'s3',name:'音量阶梯',dur:'1 分钟',secs:60,pts:['同一句“你好，我是某某，很高兴认识你”','从平常音量开始，一级一级加大','最后一级用隔三米说话的力气，但不喊']},
+ {id:'s4',name:'朗读',dur:'1 分钟',secs:60,pts:['读下面那篇材料，读出声','句尾别往下掉，最后一个字也要听清','读完用录音回放，听音量够不够']},
+ {id:'s5',name:'一分钟表达',dur:'1 分钟',secs:60,pts:['抽一张话题卡，限时一分钟','先说结论，再说两点理由，最后收一句','边说边录，回放听哪里绕了']}
+];
+var PASSAGES=[
+ '今天早上出门的时候，天有点阴，风里带着一点凉。楼下的早餐摊已经支起来了，蒸笼冒着白汽，老板一边收钱一边跟熟客打招呼。我买了一杯豆浆，站在路边慢慢喝完，才不慌不忙地去坐地铁。',
+ '这个城市最舒服的季节是秋天。白天不热，晚上有点凉，走在路上能闻到桂花的味道。很多人喜欢在这个时候去公园，坐在长椅上看书，或者干脆什么都不做，就晒晒太阳。',
+ '我最近在学一件很小的事：把每天要做的事情写下来，然后按顺序做。刚开始总忘，后来把纸贴在门口，出门就能看到。慢慢地，一天下来心里没那么乱了。'
+];
+var TOPICS=[
+ '向别人介绍你最好的朋友，说清他是谁、你们怎么认识的',
+ '解释为什么你最近有点累，给出两个原因',
+ '推荐一家你常去的店，说清它在哪、好在哪里',
+ '描述你昨天做的一件小事，按时间顺序讲',
+ '说服朋友周末一起去爬山，给出两个理由',
+ '讲一件让你印象很深的小事，最后说它改变了你什么',
+ '说明你为什么喜欢某个季节，最好带一个具体的画面',
+ '跟同事解释一个工作上的问题，先说结论再讲原因',
+ '描述你理想的周末，从早到晚讲清楚',
+ '向陌生人问路，说清你要去哪、怎么确认方向',
+ '讲讲你最近学的一个新东西，学了多久、卡在哪',
+ '解释你为什么不喜欢某一种食物，给出两个原因',
+ '推荐一部电影或者剧，说清讲的是什么、为什么值得看',
+ '说说你小时候住的地方，挑一个你最记得的场景',
+ '给别人解释一个你熟悉的概念，用大白话',
+ '讲讲你做过最勇敢的一件事，当时怎么想的',
+ '说明你的一个习惯是怎么养成的，中间遇到过什么',
+ '描述一次让你很开心的对话，聊了什么',
+ '跟朋友道歉，说清发生了什么、你准备怎么改',
+ '说说你明年想完成的一件事，以及第一步做什么'
+];
+var PKEY='voice-log-v1';
+var logs={};
+try{logs=JSON.parse(localStorage.getItem(PKEY)||'{}')}catch(e){logs={}}
+function pad(n){return n<10?'0'+n:''+n}
+function dkey(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function today(){return dkey(new Date())}
+function save(){try{localStorage.setItem(PKEY,JSON.stringify(logs))}catch(e){}}
+function day(){var k=today();if(!logs[k])logs[k]={done:[],note:''};return logs[k]}
+
+var stepsBox=$('#steps');
+STEPS.forEach(function(s,i){
+  var d=document.createElement('div');
+  d.className='step';
+  var cb=document.createElement('input');
+  cb.type='checkbox';
+  var wrap=document.createElement('div');
+  var name=document.createElement('div');
+  name.className='stepname';
+  name.textContent=(i+1)+'. '+s.name;
+  var dur=document.createElement('span');
+  dur.className='stepdur';
+  dur.textContent=s.dur;
+  name.appendChild(dur);
+  wrap.appendChild(name);
+  var ul=document.createElement('ul');
+  s.pts.forEach(function(p){var li=document.createElement('li');li.textContent=p;ul.appendChild(li)});
+  wrap.appendChild(ul);
+  var b=document.createElement('button');
+  b.className='btn2';
+  b.textContent='计时';
+  b.addEventListener('click',function(){startTimer(s.secs)});
+  wrap.appendChild(b);
+  d.appendChild(cb);d.appendChild(wrap);
+  cb.addEventListener('change',function(){
+    var e=day();var idx=e.done.indexOf(s.id);
+    if(cb.checked&&idx<0)e.done.push(s.id);
+    if(!cb.checked&&idx>=0)e.done.splice(idx,1);
+    save();updateProgress();
+  });
+  stepsBox.appendChild(d);
+});
+
+function updateProgress(){
+  var e=day();
+  $('#pbar').style.width=Math.round(e.done.length/STEPS.length*100)+'%';
+  $('#pcount').textContent=e.done.length+' / '+STEPS.length;
+  $('#note').value=e.note||'';
+  renderStreak();
+  renderHistory();
+}
+$('#note').addEventListener('input',function(){day().note=this.value;save()});
+function renderStreak(){
+  var n=0;var d=new Date();
+  if(!((logs[dkey(d)]||{}).done||[]).length) d.setDate(d.getDate()-1);
+  for(;;){
+    var k=dkey(d);
+    if(((logs[k]||{}).done||[]).length){n++;d.setDate(d.getDate()-1);}else break;
+  }
+  $('#streak').textContent='连续 '+n+' 天';
+}
+function renderHistory(){
+  var box=$('#history');box.innerHTML='';
+  var keys=Object.keys(logs).filter(function(k){return (logs[k].done||[]).length||(logs[k].note||'').trim()}).sort().reverse().slice(0,14);
+  if(!keys.length){var p=document.createElement('p');p.className='dim';p.textContent='还没有记录。';box.appendChild(p);return;}
+  keys.forEach(function(k){
+    var e=logs[k];
+    var row=document.createElement('div');row.className='hist';
+    var a=document.createElement('span');a.textContent=k.slice(5);
+    var b=document.createElement('span');b.className='dim';b.textContent=(e.done||[]).length+' / '+STEPS.length;
+    row.appendChild(a);row.appendChild(b);box.appendChild(row);
+  });
+}
+
+var tRemain=30,tInt=null;
+function renderTimer(){
+  var m=Math.floor(tRemain/60),s=tRemain%60;
+  $('#tval').textContent=pad(m)+':'+pad(s);
+}
+function stopTimer(){if(tInt){clearInterval(tInt);tInt=null}$('#tval').classList.remove('run');}
+function fmtDur(sec){
+  if(sec<60)return sec+' 秒';
+  var m=Math.floor(sec/60),r=sec%60;
+  return m+' 分钟'+(r?' '+r+' 秒':'');
+}
+function tick(){
+  var c=audioCtx();
+  if(!c)return;
+  try{
+    var o=c.createOscillator(),gg=c.createGain();
+    o.connect(gg);gg.connect(c.destination);
+    o.type='sine';o.frequency.value=1000;
+    gg.gain.setValueAtTime(0.2,c.currentTime);
+    gg.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+0.12);
+    o.start();o.stop(c.currentTime+0.13);
+  }catch(e){}
+}
+function startTimer(sec){
+  stopTimer();tRemain=sec;renderTimer();
+  $('#tval').classList.add('run');
+  if(navigator.vibrate){try{navigator.vibrate(90)}catch(e){}}
+  tick();
+  toast('开始，'+fmtDur(sec));
+  tInt=setInterval(function(){
+    tRemain--;
+    if(tRemain<=0){tRemain=0;renderTimer();stopTimer();alarm();return;}
+    renderTimer();
+  },1000);
+}
+var toastT=null;
+function toast(msg){
+  var t=$('#toast');
+  if(!t)return;
+  t.textContent=msg;t.classList.add('show');
+  if(toastT)clearTimeout(toastT);
+  toastT=setTimeout(function(){t.classList.remove('show')},2600);
+}
+var actx=null;
+function audioCtx(){
+  try{
+    if(!actx){
+      var C=window.AudioContext||window.webkitAudioContext;
+      if(!C)return null;
+      actx=new C();
+    }
+    if(actx.state==='suspended'){try{actx.resume()}catch(e){}}
+    return actx;
+  }catch(e){return null}
+}
+function alarm(){
+  var c=audioCtx();
+  if(c){
+    try{
+      var t0=c.currentTime;
+      for(var i=0;i<4;i++){
+        var o=c.createOscillator(),gg=c.createGain();
+        o.connect(gg);gg.connect(c.destination);
+        o.type='square';o.frequency.value=(i%2===0)?880:660;
+        var st=t0+i*0.45;
+        gg.gain.setValueAtTime(0.0001,st);
+        gg.gain.exponentialRampToValueAtTime(0.3,st+0.02);
+        gg.gain.exponentialRampToValueAtTime(0.0001,st+0.3);
+        o.start(st);o.stop(st+0.32);
+      }
+    }catch(e){}
+  }
+  if(navigator.vibrate){try{navigator.vibrate([300,150,300,150,300])}catch(e){}}
+  toast('时间到');
+}
+$('#tstop').addEventListener('click',stopTimer);
+$('#testAlarm').addEventListener('click',function(){audioCtx();alarm();});
+$$('.tbtn[data-sec]').forEach(function(b){
+  b.addEventListener('click',function(){audioCtx();startTimer(parseInt(b.getAttribute('data-sec'),10))});
+});
+
+var micStream=null,ac=null,analyser=null,raf=null;
+function stopMeter(){
+  if(raf){cancelAnimationFrame(raf);raf=null;}
+  if(micStream){micStream.getTracks().forEach(function(t){t.stop()});micStream=null;}
+  if(ac){try{ac.close()}catch(e){}ac=null;}
+  $('#vtext').textContent='已停止';
+  $('#vbar').style.width='0%';
+}
+$('#vstop').addEventListener('click',stopMeter);
+$('#vstart').addEventListener('click',function(){
+  var md=navigator.mediaDevices;
+  if(!md||!md.getUserMedia){$('#vhint').textContent='这个浏览器拿不到麦克风，改用手机录音机吧。';return;}
+  $('#vhint').textContent='正在打开麦克风……';
+  md.getUserMedia({audio:true}).then(function(stream){
+    micStream=stream;
+    var C=window.AudioContext||window.webkitAudioContext;
+    ac=new C();
+    analyser=ac.createAnalyser();analyser.fftSize=1024;
+    ac.createMediaStreamSource(stream).connect(analyser);
+    var data=new Uint8Array(analyser.fftSize);
+    $('#vhint').textContent='说话试试，让绿条稳定在中上，别喊。';
+    function loop(){
+      analyser.getByteTimeDomainData(data);
+      var sum=0;
+      for(var i=0;i<data.length;i++){var v=(data[i]-128)/128;sum+=v*v;}
+      var rms=Math.sqrt(sum/data.length);
+      var level=Math.min(100,Math.round(rms*320));
+      $('#vbar').style.width=level+'%';
+      $('#vtext').textContent='当前音量 '+level;
+      raf=requestAnimationFrame(loop);
+    }
+    loop();
+  }).catch(function(e){
+    $('#vhint').textContent='没拿到麦克风权限，用手机自带的录音机代替也一样。';
+  });
+});
+
+var rec=null,chunks=[],recUrl=null,recStream=null;
+$('#rstart').addEventListener('click',function(){
+  var md=navigator.mediaDevices;
+  if(!md||!md.getUserMedia||!window.MediaRecorder){$('#rhint').textContent='这个浏览器录不了音，用手机录音机。';return;}
+  md.getUserMedia({audio:true}).then(function(stream){
+    recStream=stream;chunks=[];
+    rec=new MediaRecorder(stream);
+    rec.ondataavailable=function(e){if(e.data&&e.data.size)chunks.push(e.data)};
+    rec.onstop=function(){
+      var blob=new Blob(chunks,{type:'audio/webm'});
+      if(recUrl)URL.revokeObjectURL(recUrl);
+      recUrl=URL.createObjectURL(blob);
+      var a=$('#rplay');a.src=recUrl;a.style.display='block';
+      $('#rhint').textContent='录好了，点播放听听句尾。';
+      if(recStream){recStream.getTracks().forEach(function(t){t.stop()});recStream=null;}
+    };
+    rec.start();
+    $('#rhint').textContent='正在录音……说完点停止。';
+  }).catch(function(){
+    $('#rhint').textContent='拿不到麦克风，用手机自带录音机录吧。';
+  });
+});
+$('#rstop').addEventListener('click',function(){
+  if(rec&&rec.state!=='inactive'){rec.stop();rec=null;}
+});
+
+var pIdx=0;
+function showPassage(){
+  $('#passage').textContent=PASSAGES[pIdx%PASSAGES.length];
+}
+$('#newpassage').addEventListener('click',function(){pIdx++;showPassage();});
+
+var tIdx=Math.floor(Math.random()*TOPICS.length);
+function showTopic(){
+  $('#topicText').textContent=TOPICS[tIdx%TOPICS.length];
+  $('#topicHint').textContent='结论一句话、两个理由、一个收尾。讲完再回听一遍。';
+}
+$('#newtopic').addEventListener('click',function(){tIdx++;showTopic();});
+$('#startTopic').addEventListener('click',function(){startTimer(60)});
+
+$$('nav button').forEach(function(b){
+  b.addEventListener('click',function(){
+    $$('nav button').forEach(function(x){x.classList.remove('on')});
+    b.classList.add('on');
+    $$('section').forEach(function(s){s.classList.remove('on')});
+    var sec=document.getElementById(b.getAttribute('data-t'));
+    if(sec) sec.classList.add('on');
+    if(b.getAttribute('data-t')==='log'){updateProgress();}
+    window.scrollTo(0,0);
+  });
+});
+
+renderTimer();
+showPassage();
+showTopic();
+updateProgress();
+})();
+</script>
+</body>
+</html>
